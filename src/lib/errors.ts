@@ -21,11 +21,14 @@ export class AppError extends Error {
   }
 
   toJSON() {
-    return {
+    const base = {
       code: this.code,
       message: this.message,
-      ...(this.details && { details: this.details }),
     };
+    if (this.details) {
+      return { ...base, details: this.details };
+    }
+    return base;
   }
 }
 

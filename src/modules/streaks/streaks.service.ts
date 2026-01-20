@@ -76,7 +76,6 @@ class StreaksService {
 
   async checkAndResetBrokenStreaks(userId: string) {
     // Called to check if streak should be reset (e.g., on app open)
-    const today = new Date().toISOString().split('T')[0];
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
 
     const streak = await streaksRepository.findByUser(userId);

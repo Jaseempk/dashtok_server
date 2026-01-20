@@ -25,7 +25,7 @@ class AllowancesService {
     return this.recalculateForDate(userId, today, timezone);
   }
 
-  async recalculateForDate(userId: string, dateStr: string, timezone: string) {
+  async recalculateForDate(userId: string, dateStr: string, _timezone: string) {
     // Get start and end of the day
     const startOfDay = new Date(`${dateStr}T00:00:00Z`);
     const endOfDay = new Date(`${dateStr}T23:59:59Z`);

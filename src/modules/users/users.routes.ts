@@ -4,6 +4,7 @@ import { validate } from '@/middleware/validate';
 import { usersService } from './users.service';
 import { updateUserSchema } from './users.schemas';
 import { success } from '@/lib/utils';
+import { authService } from '@/modules/auth/auth.service';
 import type { AuthContext } from '@/types/context';
 
 const usersRoutes = new Hono<AuthContext>();
@@ -14,6 +15,11 @@ usersRoutes.use('*', authMiddleware);
 // GET /users/me - Get current user profile
 usersRoutes.get('/me', async (c) => {
   const userId = c.get('userId');
+  const userEmail = c.get('userEmail');
+
+  // Ensure user exists (fallback if webhook missed)
+  await authService.ensureUserExists(userId, userEmail);
+
   const user = await usersService.getProfile(userId);
   return c.json(success(user));
 });

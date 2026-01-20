@@ -19,7 +19,7 @@ class AuthService {
   }
 
   private async handleUserCreated(data: ClerkWebhookPayload['data']) {
-    const email = data.email_addresses[0]?.email_address;
+    const email = data.email_addresses?.[0]?.email_address;
     if (!email) {
       throw new Error('No email address in webhook payload');
     }
@@ -36,7 +36,7 @@ class AuthService {
   }
 
   private async handleUserUpdated(data: ClerkWebhookPayload['data']) {
-    const email = data.email_addresses[0]?.email_address;
+    const email = data.email_addresses?.[0]?.email_address;
     const name = [data.first_name, data.last_name].filter(Boolean).join(' ') || null;
 
     return authRepository.updateUser(data.id, {

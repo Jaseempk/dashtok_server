@@ -1,10 +1,8 @@
 import { createMiddleware } from 'hono/factory';
-import { createClerkClient } from '@clerk/backend';
+import { verifyToken } from '@clerk/backend';
 import { env } from '@/config/env';
 import { Errors } from '@/lib/errors';
 import type { AuthContext } from '@/types/context';
-
-const clerk = createClerkClient({ secretKey: env.CLERK_SECRET_KEY });
 
 export const authMiddleware = createMiddleware<AuthContext>(async (c, next) => {
   const authHeader = c.req.header('Authorization');
@@ -17,7 +15,11 @@ export const authMiddleware = createMiddleware<AuthContext>(async (c, next) => {
 
   try {
     // Verify the session token with Clerk
-    const payload = await clerk.verifyToken(token);
+    // Allow 60 seconds of clock skew between server and Clerk
+    const payload = await verifyToken(token, {
+      secretKey: env.CLERK_SECRET_KEY,
+      clockSkewInMs: 60000,
+    });
 
     if (!payload.sub) {
       throw Errors.unauthorized('Invalid token payload');
