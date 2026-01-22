@@ -5,6 +5,9 @@ class AuthService {
   async handleClerkWebhook(payload: ClerkWebhookPayload) {
     const { type, data } = payload;
 
+    console.log('[Webhook] Received event:', type);
+    console.log('[Webhook] Full payload data:', JSON.stringify(data, null, 2));
+
     switch (type) {
       case 'user.created':
         return this.handleUserCreated(data);
@@ -19,12 +22,21 @@ class AuthService {
   }
 
   private async handleUserCreated(data: ClerkWebhookPayload['data']) {
+    console.log('[Webhook] handleUserCreated - raw data:', {
+      id: data.id,
+      email_addresses: data.email_addresses,
+      first_name: data.first_name,
+      last_name: data.last_name,
+    });
+
     const email = data.email_addresses?.[0]?.email_address;
     if (!email) {
       throw new Error('No email address in webhook payload');
     }
 
     const name = [data.first_name, data.last_name].filter(Boolean).join(' ') || null;
+
+    console.log('[Webhook] Creating user with:', { id: data.id, email, name });
 
     return authRepository.createUser({
       id: data.id,

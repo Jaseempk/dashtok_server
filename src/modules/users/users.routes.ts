@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { authMiddleware } from '@/middleware/auth';
 import { validate } from '@/middleware/validate';
 import { usersService } from './users.service';
-import { updateUserSchema } from './users.schemas';
+import { updateUserSchema, registerPushTokenSchema } from './users.schemas';
 import { success } from '@/lib/utils';
 import { authService } from '@/modules/auth/auth.service';
 import type { AuthContext } from '@/types/context';
@@ -37,6 +37,25 @@ usersRoutes.delete('/me', async (c) => {
   const userId = c.get('userId');
   await usersService.deleteAccount(userId);
   return c.json(success({ deleted: true }));
+});
+
+// POST /users/me/push-token - Register push token for notifications
+usersRoutes.post(
+  '/me/push-token',
+  validate.json(registerPushTokenSchema),
+  async (c) => {
+    const userId = c.get('userId');
+    const { token } = c.req.valid('json');
+    const result = await usersService.registerPushToken(userId, token);
+    return c.json(success(result));
+  }
+);
+
+// DELETE /users/me/push-token - Remove push token (disable notifications)
+usersRoutes.delete('/me/push-token', async (c) => {
+  const userId = c.get('userId');
+  const result = await usersService.removePushToken(userId);
+  return c.json(success(result));
 });
 
 export { usersRoutes };

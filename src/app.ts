@@ -11,6 +11,9 @@ import { goalsRoutes } from '@/modules/goals/goals.routes';
 import { activitiesRoutes } from '@/modules/activities/activities.routes';
 import { allowancesRoutes } from '@/modules/allowances/allowances.routes';
 import { streaksRoutes } from '@/modules/streaks/streaks.routes';
+import { blockedAppsRoutes } from '@/modules/blocked-apps/blocked-apps.routes';
+import { usageRoutes } from '@/modules/usage/usage.routes';
+import { enforcementRoutes } from '@/modules/enforcement/enforcement.routes';
 
 const app = new Hono();
 
@@ -44,6 +47,9 @@ app.route('/goals', goalsRoutes);
 app.route('/activities', activitiesRoutes);
 app.route('/allowances', allowancesRoutes);
 app.route('/streaks', streaksRoutes);
+app.route('/blocked-apps', blockedAppsRoutes);
+app.route('/usage', usageRoutes);
+app.route('/enforcement', enforcementRoutes);
 
 // 404 handler
 app.notFound((c) => {

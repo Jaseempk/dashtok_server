@@ -1,6 +1,7 @@
 import { serve } from '@hono/node-server';
 import { app } from './app';
 import { env } from '@/config/env';
+import { initializeNotificationScheduler } from '@/modules/notifications/scheduler';
 
 const server = serve(
   {
@@ -10,6 +11,9 @@ const server = serve(
   (info) => {
     console.log(`Server running on http://localhost:${info.port}`);
     console.log(`Environment: ${env.NODE_ENV}`);
+
+    // Initialize notification cron jobs
+    initializeNotificationScheduler();
   }
 );
 

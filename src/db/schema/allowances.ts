@@ -14,6 +14,9 @@ export const allowances = pgTable(
     bonusMinutes: integer('bonus_minutes').default(0).notNull(), // From streaks, achievements
     isUnlocked: boolean('is_unlocked').default(false).notNull(),
     unlockedAt: timestamp('unlocked_at', { withTimezone: true }),
+    // Screen time enforcement fields
+    realUsedMinutes: integer('real_used_minutes').default(0).notNull(), // From actual iOS tracking (not self-reported)
+    enforcementActive: boolean('enforcement_active').default(true).notNull(), // Whether enforcement is enabled for this day
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },
