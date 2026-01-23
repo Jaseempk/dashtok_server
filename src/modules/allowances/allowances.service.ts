@@ -30,12 +30,19 @@ class AllowancesService {
     const startOfDay = new Date(`${dateStr}T00:00:00Z`);
     const endOfDay = new Date(`${dateStr}T23:59:59Z`);
 
-    // Get today's activity totals
-    const activityStats = await activitiesRepository.sumDistanceForDateRange(
+    // Get today's activities and calculate trust-weighted distance
+    const dayActivities = await activitiesRepository.findByDateRange(
       userId,
       startOfDay,
       endOfDay
     );
+
+    // Apply trust weighting to distance
+    let totalDistance = 0;
+    for (const activity of dayActivities) {
+      const multiplier = this.getTrustMultiplier(activity.trustScore ?? 0);
+      totalDistance += activity.distanceMeters * multiplier;
+    }
 
     // Get active goals
     const goals = await goalsRepository.findByUser(userId, true);
@@ -48,7 +55,7 @@ class AllowancesService {
       if (goal.goalType !== 'daily') continue;
 
       const targetMeters = this.convertToMeters(goal.targetValue, goal.targetUnit);
-      const progress = activityStats.totalDistance / targetMeters;
+      const progress = totalDistance / targetMeters;
 
       if (progress >= 1) {
         // Goal completed
@@ -73,6 +80,16 @@ class AllowancesService {
       isUnlocked,
       unlockedAt: isUnlocked ? new Date() : undefined,
     });
+  }
+
+  /**
+   * Get trust multiplier for activity distance weighting.
+   * Clean activities (score >= 0) get full credit.
+   */
+  private getTrustMultiplier(trustScore: number): number {
+    if (trustScore >= 0) return 1.0;    // Clean = full credit
+    if (trustScore >= -2) return 0.5;   // Minor flags = reduced
+    return 0;                           // Major flags = no credit
   }
 
   async getHistory(userId: string, filters: AllowanceHistoryFilters) {

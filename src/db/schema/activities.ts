@@ -24,6 +24,16 @@ export const activities = pgTable(
     source: text('source', { enum: activitySourceEnum }).notNull(),
     isVerified: boolean('is_verified').default(false).notNull(),
     healthkitId: text('healthkit_id').unique(),
+
+    // Anti-cheat trust scoring
+    trustScore: integer('trust_score').default(0),
+    trustFlags: text('trust_flags').array(),
+
+    // Source metadata (for analytics, not scoring)
+    sourceBundleId: text('source_bundle_id'),
+    sourceDeviceModel: text('source_device_model'),
+    routePointCount: integer('route_point_count'),
+
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [

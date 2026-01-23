@@ -97,6 +97,19 @@ class ActivitiesRepository {
     return result[0] ?? { totalDistance: 0, totalDuration: 0, count: 0 };
   }
 
+  async findByDateRange(userId: string, startDate: Date, endDate: Date) {
+    return db
+      .select()
+      .from(activities)
+      .where(
+        and(
+          eq(activities.userId, userId),
+          gte(activities.startedAt, startDate),
+          lte(activities.startedAt, endDate)
+        )
+      );
+  }
+
   async delete(id: string) {
     await db.delete(activities).where(eq(activities.id, id));
   }

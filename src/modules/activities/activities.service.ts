@@ -7,7 +7,7 @@ import type { CreateActivityInput, ActivityFilters } from './activities.schemas'
 
 class ActivitiesService {
   async createActivity(userId: string, data: CreateActivityInput) {
-    // Validate the activity
+    // Validate the activity (hard rejection for impossible data)
     this.validateActivityData(data);
 
     // Check for duplicates
@@ -18,16 +18,24 @@ class ActivitiesService {
       }
     }
 
-    // Determine if verified (GPS tracked)
-    const isVerified = data.source === 'gps_tracked';
+    // Calculate trust score (soft penalties for suspicious patterns)
+    const { score: trustScore, flags: trustFlags } = this.calculateTrust(data);
 
-    // Create the activity
+    // Determine if verified (high trust or GPS tracked)
+    const isVerified = data.source === 'gps_tracked' || trustScore >= 0;
+
+    // Create the activity with trust metadata
     const activity = await activitiesRepository.create({
       ...data,
       userId,
       startedAt: new Date(data.startedAt),
       endedAt: new Date(data.endedAt),
       isVerified,
+      trustScore,
+      trustFlags,
+      sourceBundleId: data.sourceBundleId,
+      sourceDeviceModel: data.sourceDeviceModel,
+      routePointCount: data.routePointCount,
     });
 
     // Update allowances and streaks (fire and forget for now)
@@ -91,6 +99,71 @@ class ActivitiesService {
     if (data.durationSeconds > 86400) {
       throw Errors.invalidActivity('Activity duration cannot exceed 24 hours');
     }
+  }
+
+  /**
+   * Calculate trust score for an activity (penalty-based).
+   * Start at 0, subtract for red flags. Score >= 0 = full credit.
+   */
+  private calculateTrust(data: CreateActivityInput): { score: number; flags: string[] } {
+    let score = 0;
+    const flags: string[] = [];
+
+    // === MANUAL ENTRY (biggest red flag) ===
+    if (data.isManualEntry) {
+      score -= 5;
+      flags.push('manual_entry');
+    }
+
+    // === STRIDE & SPEED VALIDATION ===
+    if (data.steps && data.steps > 0) {
+      const stride = data.distanceMeters / data.steps;
+      const speedKmh = (data.distanceMeters / 1000) / (data.durationSeconds / 3600);
+
+      // Shake rig: tiny strides (always suspicious)
+      if (stride < 0.3) {
+        score -= 4;
+        flags.push('shake_rig_pattern');
+      }
+      // Impossible stride: too long
+      else if (stride > 2.5) {
+        score -= 2;
+        flags.push('abnormal_stride');
+      }
+      // Speed+Stride mismatch: only flag extreme cases
+      // Uses lenient thresholds to avoid false positives for short/elderly users
+      else if ((speedKmh > 12 && stride < 0.6) || (speedKmh > 8 && stride < 0.4)) {
+        score -= 3;
+        flags.push('speed_stride_mismatch');
+      }
+    }
+
+    // === ACTIVITY TYPE + SPEED SANITY CHECK ===
+    const speedKmh = (data.distanceMeters / 1000) / (data.durationSeconds / 3600);
+    if (data.activityType === 'walk' && speedKmh > 9) {
+      score -= 2;
+      flags.push('walk_speed_unrealistic');
+    }
+
+    // === BACKFILL DETECTION ===
+    const now = new Date();
+    const activityEndTime = new Date(data.endedAt);
+    const hoursSinceEnd = (now.getTime() - activityEndTime.getTime()) / (1000 * 60 * 60);
+    if (hoursSinceEnd > 24) {
+      score -= 3;
+      flags.push('potential_backfill');
+    }
+
+    // === SPARSE ROUTE (if route exists but suspiciously empty) ===
+    if (data.routePointCount && data.routePointCount > 0) {
+      const expectedPoints = data.durationSeconds / 60;
+      if (data.routePointCount < expectedPoints * 0.3) {
+        score -= 1;
+        flags.push('sparse_route');
+      }
+    }
+
+    return { score, flags };
   }
 
   private async updateUserProgress(userId: string) {

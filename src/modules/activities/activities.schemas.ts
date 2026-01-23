@@ -11,6 +11,12 @@ export const createActivitySchema = z.object({
   endedAt: z.string().datetime(),
   source: z.enum(activitySourceEnum),
   healthkitId: z.string().optional(),
+
+  // Anti-cheat: source metadata from HealthKit
+  sourceBundleId: z.string().nullable().optional(),
+  sourceDeviceModel: z.string().nullable().optional(),
+  isManualEntry: z.boolean().optional(),
+  routePointCount: z.number().int().nonnegative().optional(),
 });
 
 export const activityFiltersSchema = z.object({
