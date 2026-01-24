@@ -19,6 +19,13 @@ export const updateUserSchema = z.object({
     .optional(),
   streakAlertsEnabled: z.boolean().optional(),
   weeklySummaryEnabled: z.boolean().optional(),
+  // Onboarding demographics
+  ageRange: z.enum(['18-24', '25-34', '35-44', '45-54', '55+']).optional(),
+  gender: z.enum(['male', 'female', 'other', 'prefer-not']).optional(),
+  heightRange: z.enum(['under-150', '150-165', '165-180', 'over-180', 'prefer-not']).optional(),
+  // Behavior assessment
+  initialBehaviorScore: z.number().int().min(0).max(12).optional(),
+  profileType: z.enum(['rebuilder', 'starter', 'optimizer', 'guardian']).optional(),
 });
 
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;

@@ -7,6 +7,9 @@ export const createGoalSchema = z.object({
   targetValue: z.number().positive(),
   targetUnit: z.enum(goalUnitEnum),
   rewardMinutes: z.number().int().positive().max(480), // Max 8 hours
+  // LLM suggestion tracking
+  suggestedValue: z.number().positive().optional(),
+  userAdjusted: z.boolean().optional(),
 });
 
 export const updateGoalSchema = z.object({

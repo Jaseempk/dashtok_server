@@ -14,6 +14,7 @@ import { streaksRoutes } from '@/modules/streaks/streaks.routes';
 import { blockedAppsRoutes } from '@/modules/blocked-apps/blocked-apps.routes';
 import { usageRoutes } from '@/modules/usage/usage.routes';
 import { enforcementRoutes } from '@/modules/enforcement/enforcement.routes';
+import { onboardingRoutes } from '@/modules/onboarding/onboarding.routes';
 
 const app = new Hono();
 
@@ -50,6 +51,7 @@ app.route('/streaks', streaksRoutes);
 app.route('/blocked-apps', blockedAppsRoutes);
 app.route('/usage', usageRoutes);
 app.route('/enforcement', enforcementRoutes);
+app.route('/onboarding', onboardingRoutes);
 
 // 404 handler
 app.notFound((c) => {

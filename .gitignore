@@ -28,3 +28,10 @@ coverage/
 
 # Drizzle
 drizzle/meta/
+
+
+TODO_ONBOARDING_SERVER.md
+src/db/migrations/0003_cold_sleeper.sql
+src/db/migrations/0004_glossy_naoko.sql
+src/db/migrations/meta/0003_snapshot.json
+src/db/migrations/meta/0004_snapshot.json

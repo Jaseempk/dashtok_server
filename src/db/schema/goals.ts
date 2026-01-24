@@ -23,6 +23,10 @@ export const goals = pgTable(
     targetUnit: text('target_unit', { enum: goalUnitEnum }).notNull(),
     rewardMinutes: integer('reward_minutes').notNull(), // Screen time earned
     isActive: boolean('is_active').default(true).notNull(),
+
+    // LLM suggestion tracking (analytics)
+    suggestedValue: real('suggested_value'),
+    userAdjusted: boolean('user_adjusted').default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },
