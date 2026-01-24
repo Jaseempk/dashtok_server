@@ -6,16 +6,29 @@ import type { NewUser } from '@/db/schema';
 
 class AuthRepository {
   async createUser(data: NewUser) {
-    const [user] = await db.insert(users).values(data).returning();
+    // Use onConflictDoNothing to handle duplicate webhook events gracefully
+    const [user] = await db
+      .insert(users)
+      .values(data)
+      .onConflictDoNothing({ target: users.id })
+      .returning();
 
-    // Also create initial streak record
-    await db.insert(streaks).values({
-      id: generateId(),
-      userId: user.id,
-      currentStreak: 0,
-      longestStreak: 0,
-      multiplier: 1.0,
-    });
+    // If user already existed, fetch and return them
+    if (!user) {
+      return this.findUserById(data.id);
+    }
+
+    // Create initial streak record for new users
+    await db
+      .insert(streaks)
+      .values({
+        id: generateId(),
+        userId: user.id,
+        currentStreak: 0,
+        longestStreak: 0,
+        multiplier: 1.0,
+      })
+      .onConflictDoNothing({ target: streaks.userId });
 
     return user;
   }
